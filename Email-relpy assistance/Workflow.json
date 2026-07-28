@@ -1,0 +1,257 @@
+{
+  "name": "Email-reply assistance",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 6,
+              "triggerAtMinute": 19
+            }
+          ]
+        }
+      },
+      "id": "240da61a-d430-4d3f-bbc5-54b46b400b19",
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        0,
+        112
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "limit": 10,
+        "filters": {
+          "labelIds": [
+            "UNREAD",
+            "CATEGORY_PERSONAL"
+          ]
+        }
+      },
+      "id": "bd61e101-299a-43e4-be39-d64214417ffe",
+      "name": "Get many messages",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        224,
+        112
+      ],
+      "webhookId": "2db4a7cc-f67e-443e-9564-ca130e9a5da3",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "otDQrN3q7e6pWduw",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "dataToSave": {
+          "values": [
+            {
+              "key": "snippet"
+            }
+          ]
+        }
+      },
+      "id": "1cb28378-e500-46ed-9688-02ee0f457f5c",
+      "name": "Execution Data",
+      "type": "n8n-nodes-base.executionData",
+      "typeVersion": 1.1,
+      "position": [
+        448,
+        112
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=A new email has been received.\n\nSubject: {{ $json.Subject }}\nFrom: {{ $json.From }}\nBody: {{ $json.snippet }}\n\nAnalyze this email and return the JSON object described in your instructions.",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "You are an AI Email Assistant that triages an incoming email and drafts a reply.\n\nReturn a single JSON object matching the required schema, with these fields:\n- intent: the category of the email.\n- priority: one of Low, Medium, High, Urgent.\n- sentiment: one of Positive, Neutral, Negative.\n- safe_to_reply: true only if the reply can be sent automatically without human review.\n- requires_human_review: true if a human should review before sending.\n- reply_subject: the subject line for the reply (usually \"Re: \" + the original subject).\n- reply_body: the complete email reply.\n- confidence: a number between 0 and 1.\n- reason: why the email should or should not be replied to automatically.\n\nRules for reply_body:\n- Write in a warm, gentle and respectful tone.\n- Keep the response concise unless the sender requests details.\n- Never invent facts. If information is missing, politely ask for clarification.\n- Maintain proper email formatting and end the message with:\n\nKind regards,\n\n- Never reveal that you are an AI.\n- If the email contains legal, financial, medical, HR, or confidential topics, set safe_to_reply to false, set requires_human_review to true, and set reply_body to the exact text REVIEW_REQUIRED.\n\nReturn only the JSON object."
+        }
+      },
+      "id": "ae670650-5e87-4aa2-87ec-a2af0aae4fd1",
+      "name": "AI Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        736,
+        112
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "bde801c7-c33d-4af8-aca9-147d72aed69f",
+      "name": "Google Gemini Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        672,
+        336
+      ],
+      "credentials": {
+        "googlePalmApi": {
+          "id": null,
+          "name": "",
+          "__aiGatewayManaged": true
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('Get many messages').item.json.id }}",
+        "contextWindowLength": 100
+      },
+      "id": "0a593e92-9c98-471a-9b70-b7f918ecea65",
+      "name": "Simple Memory",
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.4,
+      "position": [
+        800,
+        336
+      ]
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"intent\": \"Meeting Inquiry\",\n  \"priority\": \"Medium\",\n  \"sentiment\": \"Neutral\",\n  \"safe_to_reply\": true,\n  \"requires_human_review\": false,\n  \"reply_subject\": \"Re: Meeting time\",\n  \"reply_body\": \"Hi Alex,\\n\\nThank you for reaching out. The meeting is scheduled for 3 PM tomorrow.\\n\\nKind regards,\",\n  \"confidence\": 0.9,\n  \"reason\": \"Straightforward request that can be answered directly.\"\n}"
+      },
+      "id": "438b9522-738f-4d72-be2a-8164da04588b",
+      "name": "Structured Output Parser",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        928,
+        336
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "reply",
+        "messageId": "={{ $('Execution Data').item.json.id }}",
+        "emailType": "text",
+        "message": "={{ $json.output.reply_body }}",
+        "options": {
+          "replyToSenderOnly": true
+        }
+      },
+      "id": "07441265-898f-4686-9732-0f0cd8fdf649",
+      "name": "Send Reply",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1136,
+        112
+      ],
+      "webhookId": "71ab70c7-2c7d-4b35-b5a9-2a2f15136e17",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "otDQrN3q7e6pWduw",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get many messages",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get many messages": {
+      "main": [
+        [
+          {
+            "node": "Execution Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execution Data": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Send Reply",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": true
+  },
+  "versionId": "6282002a-cd85-401a-98b0-35d4db09a0dc",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "6d7ae048d253036f7dc7279789faa69fe8ffdc5d77af22d11e237700e20069b1"
+  },
+  "nodeGroups": [],
+  "id": "FZMCGvbsJw38HC6P",
+  "tags": []
+}
