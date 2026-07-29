@@ -1,0 +1,182 @@
+{
+  "name": "AI Meeting Notes - Live Chunk Workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "meeting-notes",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        240
+      ],
+      "id": "webhook-node",
+      "name": "Webhook"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combinationMode": "multiplex",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3,
+      "position": [
+        250,
+        240
+      ],
+      "id": "set-node",
+      "name": "Set",
+      "value": {
+        "value": [
+          {
+            "name": "meetingId",
+            "value": "={{ $json.body.meetingId }}"
+          },
+          {
+            "name": "meetingTitle",
+            "value": "={{ $json.body.meetingTitle }}"
+          },
+          {
+            "name": "userId",
+            "value": "={{ $json.body.userId }}"
+          },
+          {
+            "name": "transcript",
+            "value": "={{ $json.body.transcript }}"
+          },
+          {
+            "name": "status",
+            "value": "LIVE"
+          }
+        ]
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are an expert meeting assistant.\n\nConvert the transcript into JSON.\n\nRules\nDo not explain.\nReturn only JSON.\n\nTranscript:\n{{ $json.transcript }}\n\nOutput format:\n{\n \"bulletPoints\":[],\n \"summary\":\"\",\n \"actionItems\":[\n   {\n     \"person\":\"\",\n     \"task\":\"\"\n   }\n ],\n \"decisions\":[],\n \"questions\":[]\n}",
+        "options": {
+          "responseFormat": {
+            "type": "json_object"
+          }
+        }
+      },
+      "type": "n8n-nodes-base.googleGemini",
+      "typeVersion": 1,
+      "position": [
+        500,
+        240
+      ],
+      "id": "ai-agent-node",
+      "name": "AI Agent",
+      "credentials": {
+        "googleGeminiApi": {
+          "id": "google-gemini-palm-api-account",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "json",
+        "json": "={{ typeof $json.text === 'string' ? JSON.parse($json.text) : $json }}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        750,
+        240
+      ],
+      "id": "json-parser-node",
+      "name": "JSON Parser"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Save to in-memory/database simulator\nreturn [{\n  json: {\n    status: \"success\",\n    summary: items[0].json.summary || \"\",\n    bulletPoints: items[0].json.bulletPoints || [],\n    actionItems: items[0].json.actionItems || [],\n    decisions: items[0].json.decisions || [],\n    questions: items[0].json.questions || []\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1000,
+        240
+      ],
+      "id": "database-node",
+      "name": "Database"
+    },
+    {
+      "parameters": {
+        "respondWith": "lastNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        1250,
+        240
+      ],
+      "id": "respond-node",
+      "name": "Respond to Webhook"
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Set",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "JSON Parser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "JSON Parser": {
+      "main": [
+        [
+          {
+            "node": "Database",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Database": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {},
+  "versionId": "live-chunk-workflow-v1",
+  "id": "live-chunk-workflow"
+}

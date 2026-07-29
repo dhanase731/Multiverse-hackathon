@@ -1,0 +1,166 @@
+{
+  "name": "AI Meeting Notes - End Meeting Workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "end-meeting",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        240
+      ],
+      "id": "end-meeting-webhook",
+      "name": "Webhook"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are an expert meeting assistant.\n\nAnalyze the complete meeting transcript.\n\nGenerate concise professional meeting notes.\n\nReturn only JSON.\n\n{\n\"meetingTitle\":\"{{ $json.body.meetingTitle }}\",\n\"summary\":\"\",\n\"keyPoints\":[],\n\"actionItems\":[\n{\n\"person\":\"\",\n\"task\":\"\",\n\"priority\":\"High\"\n}\n],\n\"decisions\":[],\n\"nextSteps\":[]\n}\n\nRules\n\nMaximum 5 bullet points.\n\nMaximum 5 action items.\n\nNo explanations.\n\nNo markdown.\n\nNo extra text.\n\nOnly valid JSON.\n\nTranscript:\n{{ $json.body.transcript }}",
+        "options": {
+          "responseFormat": {
+            "type": "json_object"
+          }
+        }
+      },
+      "type": "n8n-nodes-base.googleGemini",
+      "typeVersion": 1,
+      "position": [
+        250,
+        240
+      ],
+      "id": "ai-final-summary-node",
+      "name": "AI Final Summary",
+      "credentials": {
+        "googleGeminiApi": {
+          "id": "google-gemini-palm-api-account",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "json",
+        "json": "={{ typeof $json.text === 'string' ? JSON.parse($json.text) : $json }}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        500,
+        240
+      ],
+      "id": "json-parser-node-2",
+      "name": "JSON Parser"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Save final summary and PDF metadata to DB\nreturn items;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        750,
+        240
+      ],
+      "id": "save-db-node",
+      "name": "Save Database"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $node[\"Webhook\"].json[\"body\"][\"userId\"] || 'recipient@gmail.com' }}",
+        "subject": "={{ $node[\"Webhook\"].json[\"body\"][\"meetingTitle\"] || 'Sync Session' }} - Final Meeting Notes",
+        "emailType": "html",
+        "html": "=<h3>Meeting Summary</h3><p>{{ $json[\"summary\"] }}</p><h4>Key Points</h4><ul>{{ ($json[\"keyPoints\"] || []).map(pt => `<li>${pt}</li>`).join('') }}</ul><h4>Action Items</h4><ul>{{ ($json[\"actionItems\"] || []).map(item => `<li><strong>${item.person || 'Team'}:</strong> ${item.task} (${item.priority || 'High'})</li>`).join('') }}</ul>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2,
+      "position": [
+        1000,
+        240
+      ],
+      "id": "gmail-node",
+      "name": "Gmail",
+      "credentials": {
+        "gmailOAuth2Api": {
+          "id": "gmail-account",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "lastNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        1250,
+        240
+      ],
+      "id": "respond-node-2",
+      "name": "Respond"
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "AI Final Summary",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Final Summary": {
+      "main": [
+        [
+          {
+            "node": "JSON Parser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "JSON Parser": {
+      "main": [
+        [
+          {
+            "node": "Save Database",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Database": {
+      "main": [
+        [
+          {
+            "node": "Gmail",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gmail": {
+      "main": [
+        [
+          {
+            "node": "Respond",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {},
+  "versionId": "end-meeting-workflow-v1",
+  "id": "end-meeting-workflow"
+}

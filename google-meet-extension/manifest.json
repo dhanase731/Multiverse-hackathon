@@ -1,0 +1,23 @@
+{
+  "manifest_version": 3,
+  "name": "Meeting Notes AI — Meet Bridge",
+  "version": "2.0.0",
+  "description": "Reads Google Meet live captions from the DOM and streams them to Meeting Notes AI backend.",
+  "permissions": [
+    "activeTab",
+    "storage"
+  ],
+  "host_permissions": [
+    "http://localhost:5000/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": ["https://meet.google.com/*"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "action": {
+    "default_popup": "popup.html"
+  }
+}

@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      width: 300px;
+      font-family: 'Segoe UI', sans-serif;
+      background: #f8fafc;
+      color: #0f172a;
+      padding: 16px;
+    }
+
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+    .header-icon { font-size: 20px; }
+    .header h3 { font-size: 15px; color: #2563eb; font-weight: 700; }
+
+    .card {
+      background: #fff;
+      border-radius: 10px;
+      padding: 14px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+      margin-bottom: 12px;
+    }
+
+    label {
+      font-size: 11px;
+      font-weight: 700;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      display: block;
+      margin-bottom: 6px;
+    }
+
+    input {
+      width: 100%;
+      padding: 9px 10px;
+      border: 1px solid #e2e8f0;
+      border-radius: 7px;
+      font-size: 13px;
+      margin-bottom: 12px;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    input:focus { border-color: #2563eb; }
+
+    #toggleBtn {
+      width: 100%;
+      padding: 10px;
+      border: none;
+      border-radius: 7px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      background: #2563eb;
+      color: #fff;
+      transition: background 0.15s, transform 0.1s;
+    }
+    #toggleBtn:hover  { background: #1d4ed8; }
+    #toggleBtn:active { transform: scale(0.98); }
+    #toggleBtn:disabled { background: #94a3b8; cursor: not-allowed; }
+
+    .status-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 10px;
+    }
+    .status-left { display: flex; align-items: center; gap: 7px; }
+
+    .dot {
+      width: 9px; height: 9px;
+      border-radius: 50%;
+      background: #cbd5e1;
+      flex-shrink: 0;
+    }
+    .dot.active {
+      background: #22c55e;
+      box-shadow: 0 0 0 3px rgba(34,197,94,0.2);
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { box-shadow: 0 0 0 3px rgba(34,197,94,0.2); }
+      50%       { box-shadow: 0 0 0 6px rgba(34,197,94,0.05); }
+    }
+
+    #statusText { font-size: 12px; color: #64748b; }
+
+    .chunk-badge {
+      font-size: 11px;
+      font-weight: 700;
+      background: #eff6ff;
+      color: #2563eb;
+      padding: 2px 8px;
+      border-radius: 9999px;
+      display: none;
+    }
+    .chunk-badge.visible { display: inline-block; }
+
+    .hint {
+      font-size: 11px;
+      color: #94a3b8;
+      line-height: 1.5;
+      padding: 10px 12px;
+      background: #f1f5f9;
+      border-radius: 7px;
+      border-left: 3px solid #2563eb;
+    }
+    .hint strong { color: #475569; }
+
+    .not-meet {
+      text-align: center;
+      padding: 20px 0;
+      color: #94a3b8;
+      font-size: 13px;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <span class="header-icon">✦</span>
+    <h3>Meeting Notes AI Bridge</h3>
+  </div>
+
+  <div id="main-ui">
+    <div class="card">
+      <label for="meetingId">Meeting ID</label>
+      <input type="text" id="meetingId" placeholder="e.g. meet_1234567890" />
+
+      <button id="toggleBtn">Connect &amp; Stream</button>
+
+      <div class="status-row">
+        <div class="status-left">
+          <div id="statusDot" class="dot"></div>
+          <span id="statusText">Disconnected</span>
+        </div>
+        <span id="chunkBadge" class="chunk-badge">0 chunks</span>
+      </div>
+    </div>
+
+    <div class="hint">
+      <strong>How to use:</strong><br/>
+      1. Start a meeting in your React app<br/>
+      2. Paste the Meeting ID above<br/>
+      3. Click <strong>Connect &amp; Stream</strong><br/>
+      4. Google Meet captions stream live to AI
+    </div>
+  </div>
+
+  <div id="not-meet-ui" class="not-meet" style="display:none">
+    Open this extension on a<br/><strong>meet.google.com</strong> tab
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

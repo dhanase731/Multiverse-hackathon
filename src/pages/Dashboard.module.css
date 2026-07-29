@@ -1,0 +1,207 @@
+.page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Header */
+.header {
+  background: var(--surface);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+.headerInner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 16px 20px;
+}
+@media (min-width: 768px) {
+  .headerInner { padding: 16px 64px; }
+}
+.logo {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--on-surface);
+}
+
+/* Main */
+.main {
+  flex: 1;
+  max-width: 1120px;
+  margin: 0 auto;
+  width: 100%;
+  padding: 32px 20px;
+}
+@media (min-width: 768px) {
+  .main { padding: 32px 64px; }
+}
+
+/* Welcome */
+.welcome {
+  margin-bottom: 80px;
+  margin-top: 32px;
+  text-align: center;
+}
+@media (min-width: 768px) {
+  .welcome { text-align: left; }
+}
+.greeting {
+  font-size: clamp(32px, 6vw, 48px);
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  color: var(--on-surface);
+  margin-bottom: 8px;
+}
+.subtitle {
+  font-size: 18px;
+  line-height: 30px;
+  color: var(--on-surface-variant);
+  opacity: 0.8;
+}
+
+/* Action */
+.actionSection {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 80px;
+}
+.pulseWrapper {
+  position: relative;
+}
+.pulseRing {
+  position: absolute;
+  inset: 0;
+  background: var(--primary);
+  border-radius: 9999px;
+  opacity: 0.2;
+  animation: pulse-ring 3s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+}
+.startBtn {
+  position: relative;
+  background: var(--primary);
+  color: var(--on-primary);
+  font-family: 'Manrope', sans-serif;
+  font-size: 22px;
+  font-weight: 600;
+  padding: 24px 48px;
+  border-radius: 9999px;
+  border: none;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-shadow: 0 8px 24px rgba(37, 99, 235, 0.35);
+  transition: transform 0.15s, filter 0.15s;
+}
+.startBtn:hover { filter: brightness(1.1); }
+.startBtn:active { transform: scale(0.96); }
+
+/* Recent */
+.recentSection {
+  max-width: 768px;
+  margin: 0 auto;
+  width: 100%;
+}
+.recentHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+.recentTitle {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--on-surface);
+}
+.viewAll {
+  background: none;
+  border: none;
+  color: var(--primary);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+.viewAll:hover { text-decoration: underline; }
+
+.meetingList { display: flex; flex-direction: column; gap: 16px; }
+
+.meetingCard {
+  background: var(--surface-container-lowest);
+  padding: 24px;
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow-soft);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: box-shadow 0.2s, border-color 0.2s, transform 0.15s;
+}
+.meetingCard:hover {
+  box-shadow: var(--shadow-hover);
+  border-color: rgba(37, 99, 235, 0.2);
+}
+.meetingCard:active { transform: scale(0.98); }
+
+.meetingLeft { display: flex; align-items: flex-start; gap: 16px; }
+.meetingIcon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: rgba(37, 99, 235, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.meetingTitle {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--on-surface);
+  margin-bottom: 4px;
+}
+.meetingMeta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 12px;
+  color: var(--on-surface-variant);
+}
+.dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--outline-variant);
+}
+
+/* Decor */
+.decorTop {
+  position: fixed;
+  top: 80px;
+  right: 10%;
+  width: 256px;
+  height: 256px;
+  background: rgba(37, 99, 235, 0.05);
+  border-radius: 50%;
+  filter: blur(48px);
+  z-index: -1;
+  animation: pulse-ring 6s infinite;
+}
+.decorBottom {
+  position: fixed;
+  bottom: 160px;
+  left: 5%;
+  width: 384px;
+  height: 384px;
+  background: rgba(107, 255, 143, 0.05);
+  border-radius: 50%;
+  filter: blur(48px);
+  z-index: -1;
+}
