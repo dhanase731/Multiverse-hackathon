@@ -84,7 +84,7 @@ export default function AutomationHistory() {
 
   return (
     <Layout>
-      <div className="p-10 flex flex-col gap-6">
+      <div className="p-6 flex flex-col gap-6">
 
         {/* Filter Bar */}
         <section className="flex flex-wrap items-center justify-between gap-6">

@@ -1,33 +1,53 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
-import Logo from './pages/Logo.jsx'
-import GoogleSignIn from './pages/GoogleSignIn.jsx'
-import Onboarding from './pages/Onboarding.jsx'
-import OnboardingSetup from './pages/OnboardingSetup.jsx'
-import LandingPage from './pages/LandingPage.jsx'
-import WorkspaceAIDrafts from './pages/WorkspaceAIDrafts.jsx'
-import WorkspaceSettings from './pages/WorkspaceSettings.jsx'
-import WorkspaceReplyHistory from './pages/WorkspaceReplyHistory.jsx'
-import AutomationHistory from './pages/AutomationHistory.jsx'
+import ProtectedRoute from './components/ProtectedRoute'
+
+// Public
+import LoginPage      from './pages/LoginPage.jsx'
+import OnboardingPage from './pages/OnboardingPage.jsx'
+
+// Workspace
+import DashboardPage  from './pages/DashboardPage.jsx'
+import QueuePage      from './pages/QueuePage.jsx'
+import HistoryPage    from './pages/HistoryPage.jsx'
+import DraftsPage     from './pages/DraftsPage.jsx'
+import SettingsPage   from './pages/SettingsPage.jsx'
+
+// Legacy pages kept intact
+import Inbox          from './pages/Inbox.jsx'
+import Processing     from './pages/Processing.jsx'
+import History        from './pages/History.jsx'
+import Drafts         from './pages/Drafts.jsx'
+import Settings       from './pages/Settings.jsx'
 import AutomationDetails from './pages/AutomationDetails.jsx'
-import UnifiedWorkspace from './pages/UnifiedWorkspace.jsx'
-import DesignSystem from './pages/DesignSystem.jsx'
+
+const P = ({ children }) => <ProtectedRoute>{children}</ProtectedRoute>
 
 export default function App() {
   return (
     <Routes>
-      <Route path="/" element={<Logo />} />
-      <Route path="/signin" element={<GoogleSignIn />} />
-      <Route path="/onboarding" element={<Onboarding />} />
-      <Route path="/onboarding/setup" element={<OnboardingSetup />} />
-      <Route path="/landing" element={<LandingPage />} />
-      <Route path="/workspace" element={<WorkspaceAIDrafts />} />
-      <Route path="/workspace/settings" element={<WorkspaceSettings />} />
-      <Route path="/workspace/reply-history" element={<WorkspaceReplyHistory />} />
-      <Route path="/history" element={<AutomationHistory />} />
-      <Route path="/automation/:id" element={<AutomationDetails />} />
-      <Route path="/queue" element={<UnifiedWorkspace />} />
-      <Route path="/design" element={<DesignSystem />} />
-      <Route path="*" element={<Navigate to="/" />} />
+      {/* Public */}
+      <Route path="/login"      element={<LoginPage />} />
+      <Route path="/onboarding" element={<OnboardingPage />} />
+
+      {/* Reconstructed workspace pages */}
+      <Route path="/dashboard"  element={<P><DashboardPage /></P>} />
+      <Route path="/queue"      element={<P><QueuePage /></P>} />
+      <Route path="/history"    element={<P><HistoryPage /></P>} />
+      <Route path="/drafts"     element={<P><DraftsPage /></P>} />
+      <Route path="/settings"   element={<P><SettingsPage /></P>} />
+
+      {/* Connected workspace pages */}
+      <Route path="/inbox"      element={<P><Inbox /></P>} />
+      <Route path="/processing" element={<P><Processing /></P>} />
+      <Route path="/sent"       element={<P><History /></P>} />
+      <Route path="/ai-drafts"  element={<P><Drafts /></P>} />
+      <Route path="/preferences"element={<P><Settings /></P>} />
+
+      <Route path="/automation/:id" element={<P><AutomationDetails /></P>} />
+
+      {/* Default */}
+      <Route path="/" element={<Navigate to="/login" replace />} />
+      <Route path="*" element={<Navigate to="/login" replace />} />
     </Routes>
   )
 }

@@ -26,7 +26,7 @@ const drafts = [
 export default function WorkspaceAIDrafts() {
   return (
     <Layout>
-      <div className="px-10 py-6">
+      <div className="p-6">
         <div className="mb-6">
           <h2 className="text-2xl font-bold tracking-tight text-on-surface">AI Drafts Queue</h2>
           <p className="text-sm text-on-surface-variant mt-1">Review and approve your AI-generated replies before they go out.</p>

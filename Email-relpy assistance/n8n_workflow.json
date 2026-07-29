@@ -1,0 +1,918 @@
+{
+  "name": "Unified Email Reply Assistant Workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "d7a59636-85ac-4520-abd8-71cf228fa479",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-trigger-node",
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [
+        -200,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "dataType": "string",
+        "value1": "={{ $json.body.action }}",
+        "rules": {
+          "rules": [
+            {
+              "value2": "sync_user"
+            },
+            {
+              "value2": "trigger_email_workflow"
+            },
+            {
+              "value2": "get_drafts"
+            },
+            {
+              "value2": "approve_draft"
+            },
+            {
+              "value2": "reject_draft"
+            },
+            {
+              "value2": "get_history"
+            },
+            {
+              "value2": "get_queue"
+            },
+            {
+              "value2": "schedule_draft"
+            },
+            {
+              "value2": "get_settings"
+            },
+            {
+              "value2": "save_settings"
+            }
+          ]
+        }
+      },
+      "id": "action-router-switch",
+      "name": "Action Router",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 1,
+      "position": [
+        20,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "upsert",
+        "schema": "public",
+        "table": "profiles",
+        "columns": [
+          "id",
+          "email",
+          "name",
+          "avatar",
+          "updated_at"
+        ],
+        "options": {}
+      },
+      "id": "supabase-sync-user",
+      "name": "Supabase Sync User",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        300,
+        -200
+      ],
+      "credentials": {
+        "supabaseApi": {
+          "id": "supabase-creds",
+          "name": "Supabase Connection"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {
+          "responseCode": 200
+        },
+        "responseBody": "{\n  \"success\": true\n}"
+      },
+      "id": "respond-success",
+      "name": "Respond Success",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        800,
+        -200
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "limit": 10,
+        "filters": {
+          "labelIds": [
+            "UNREAD",
+            "CATEGORY_PERSONAL"
+          ]
+        }
+      },
+      "id": "gmail-get-inbox",
+      "name": "Gmail Get Inbox",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        300,
+        0
+      ],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "gmail-creds",
+          "name": "Gmail Connection"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=A new email has been received.\n\nSubject: {{ $json.Subject }}\nFrom: {{ $json.From }}\nBody: {{ $json.snippet }}\n\nAnalyze this email and return the JSON object matching the required schema.",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "You are an AI Email Assistant that triages an incoming email and drafts a professional reply.\n\nReturn a single JSON object matching the required schema, with these fields:\n- intent: the category of the email.\n- priority: one of Low, Medium, High, Urgent.\n- sentiment: one of Positive, Neutral, Negative.\n- safe_to_reply: true only if the reply can be sent automatically without human review.\n- requires_human_review: true if a human should review before sending.\n- reply_subject: the subject line for the reply (usually \"Re: \" + the original subject).\n- reply_body: the complete email reply.\n- confidence: a number between 0 and 1.\n- reason: why the email should or should not be replied to automatically.\n\nReturn only the JSON object."
+        }
+      },
+      "id": "gemini-ai-agent",
+      "name": "Gemini AI Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        550,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "gemini-chat-model",
+      "name": "Google Gemini Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        500,
+        180
+      ],
+      "credentials": {
+        "googlePalmApi": {
+          "id": "gemini-creds",
+          "name": "Google Gemini"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"intent\": \"General Inquiry\",\n  \"priority\": \"Medium\",\n  \"sentiment\": \"Neutral\",\n  \"safe_to_reply\": true,\n  \"requires_human_review\": false,\n  \"reply_subject\": \"Re: Inquiry\",\n  \"reply_body\": \"Dear Sender,\\n\\nThank you for reaching out. We have received your inquiry.\\n\\nKind regards,\",\n  \"confidence\": 0.95,\n  \"reason\": \"Simple general greeting.\"\n}"
+      },
+      "id": "structured-output-parser",
+      "name": "Structured Output Parser",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        650,
+        180
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "insert",
+        "schema": "public",
+        "table": "email_drafts",
+        "columns": [
+          "user_id",
+          "original_message_id",
+          "subject",
+          "from_email",
+          "snippet",
+          "intent",
+          "priority",
+          "sentiment",
+          "safe_to_reply",
+          "requires_human_review",
+          "reply_subject",
+          "reply_body",
+          "confidence",
+          "reason",
+          "status"
+        ],
+        "options": {}
+      },
+      "id": "supabase-insert-draft",
+      "name": "Supabase Insert Draft",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        800,
+        0
+      ],
+      "credentials": {
+        "supabaseApi": {
+          "id": "supabase-creds",
+          "name": "Supabase Connection"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {
+          "responseCode": 200
+        },
+        "responseBody": "={\n  \"success\": true,\n  \"data\": {{ JSON.stringify($json) }}\n}"
+      },
+      "id": "respond-draft-created",
+      "name": "Respond Draft Created",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        1000,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": "public",
+        "table": "email_drafts",
+        "filters": {
+          "conditions": [
+            {
+              "key": "user_id",
+              "value": "={{ $json.body.userId }}"
+            },
+            {
+              "key": "status",
+              "value": "pending"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "supabase-get-drafts",
+      "name": "Supabase Get Drafts",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        300,
+        200
+      ],
+      "credentials": {
+        "supabaseApi": {
+          "id": "supabase-creds",
+          "name": "Supabase Connection"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {
+          "responseCode": 200
+        },
+        "responseBody": "={{ JSON.stringify($json) }}"
+      },
+      "id": "respond-drafts-list",
+      "name": "Respond Drafts List",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        550,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "reply",
+        "messageId": "={{ $json.body.messageId }}",
+        "emailType": "text",
+        "message": "={{ $json.body.replyBody }}",
+        "options": {
+          "replyToSenderOnly": true
+        }
+      },
+      "id": "gmail-send-reply",
+      "name": "Gmail Send Reply",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        300,
+        400
+      ],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "gmail-creds",
+          "name": "Gmail Connection"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "schema": "public",
+        "table": "email_drafts",
+        "filters": {
+          "conditions": [
+            {
+              "key": "id",
+              "value": "={{ $json.body.draftId }}"
+            }
+          ]
+        },
+        "updateData": {
+          "status": "sent",
+          "sent_at": "={{ new Date().toISOString() }}"
+        },
+        "options": {}
+      },
+      "id": "supabase-update-draft-sent",
+      "name": "Supabase Update Draft Sent",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        550,
+        400
+      ],
+      "credentials": {
+        "supabaseApi": {
+          "id": "supabase-creds",
+          "name": "Supabase Connection"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {
+          "responseCode": 200
+        },
+        "responseBody": "{\n  \"success\": true,\n  \"message\": \"Reply sent and status updated\"\n}"
+      },
+      "id": "respond-reply-sent",
+      "name": "Respond Reply Sent",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        800,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "schema": "public",
+        "table": "email_drafts",
+        "filters": {
+          "conditions": [
+            {
+              "key": "id",
+              "value": "={{ $json.body.draftId }}"
+            }
+          ]
+        },
+        "updateData": {
+          "status": "rejected"
+        },
+        "options": {}
+      },
+      "id": "supabase-reject-draft",
+      "name": "Supabase Reject Draft",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        300,
+        600
+      ],
+      "credentials": {
+        "supabaseApi": {
+          "id": "supabase-creds",
+          "name": "Supabase Connection"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {
+          "responseCode": 200
+        },
+        "responseBody": "{\n  \"success\": true\n}"
+      },
+      "id": "respond-reject-success",
+      "name": "Respond Reject Success",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        550,
+        600
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": "public",
+        "table": "email_drafts",
+        "filters": {
+          "conditions": [
+            {
+              "key": "user_id",
+              "value": "={{ $json.body.userId }}"
+            },
+            {
+              "key": "status",
+              "value": "sent"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "supabase-get-history",
+      "name": "Supabase Get History",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        300,
+        800
+      ],
+      "credentials": {
+        "supabaseApi": {
+          "id": "supabase-creds",
+          "name": "Supabase Connection"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {
+          "responseCode": 200
+        },
+        "responseBody": "={{ JSON.stringify($json) }}"
+      },
+      "id": "respond-history-list",
+      "name": "Respond History List",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        550,
+        800
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": "public",
+        "table": "email_drafts",
+        "filters": {
+          "conditions": [
+            {
+              "key": "user_id",
+              "value": "={{ $json.body.userId }}"
+            },
+            {
+              "key": "status",
+              "value": "processing"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "supabase-get-queue",
+      "name": "Supabase Get Queue",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        300,
+        1000
+      ],
+      "credentials": {
+        "supabaseApi": {
+          "id": "supabase-creds",
+          "name": "Supabase Connection"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {
+          "responseCode": 200
+        },
+        "responseBody": "={{ JSON.stringify($json) }}"
+      },
+      "id": "respond-queue-list",
+      "name": "Respond Queue List",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        550,
+        1000
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "schema": "public",
+        "table": "email_drafts",
+        "filters": {
+          "conditions": [
+            {
+              "key": "id",
+              "value": "={{ $json.body.draftId }}"
+            }
+          ]
+        },
+        "updateData": {
+          "status": "scheduled",
+          "scheduled_at": "={{ $json.body.scheduledAt }}"
+        },
+        "options": {}
+      },
+      "id": "supabase-schedule-draft",
+      "name": "Supabase Schedule Draft",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        300,
+        1200
+      ],
+      "credentials": {
+        "supabaseApi": {
+          "id": "supabase-creds",
+          "name": "Supabase Connection"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {
+          "responseCode": 200
+        },
+        "responseBody": "{\n  \"success\": true\n}"
+      },
+      "id": "respond-schedule-success",
+      "name": "Respond Schedule Success",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        550,
+        1200
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "select",
+        "schema": "public",
+        "table": "settings",
+        "filters": {
+          "conditions": [
+            {
+              "key": "user_id",
+              "value": "={{ $json.body.userId }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "supabase-get-settings",
+      "name": "Supabase Get Settings",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        300,
+        1400
+      ],
+      "credentials": {
+        "supabaseApi": {
+          "id": "supabase-creds",
+          "name": "Supabase Connection"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {
+          "responseCode": 200
+        },
+        "responseBody": "={{ JSON.stringify($json) }}"
+      },
+      "id": "respond-settings-data",
+      "name": "Respond Settings Data",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        550,
+        1400
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "upsert",
+        "schema": "public",
+        "table": "settings",
+        "columns": [
+          "user_id",
+          "tone",
+          "language",
+          "frequency",
+          "auto_schedule",
+          "categorization",
+          "signature",
+          "updated_at"
+        ],
+        "options": {}
+      },
+      "id": "supabase-save-settings",
+      "name": "Supabase Save Settings",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        300,
+        1600
+      ],
+      "credentials": {
+        "supabaseApi": {
+          "id": "supabase-creds",
+          "name": "Supabase Connection"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {
+          "responseCode": 200
+        },
+        "responseBody": "{\n  \"success\": true\n}"
+      },
+      "id": "respond-save-settings-success",
+      "name": "Respond Save Settings Success",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        550,
+        1600
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook Trigger": {
+      "main": [
+        [
+          {
+            "node": "Action Router",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Action Router": {
+      "main": [
+        [
+          {
+            "node": "Supabase Sync User",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Gmail Get Inbox",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Supabase Get Drafts",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Gmail Send Reply",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Supabase Reject Draft",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Supabase Get History",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Supabase Get Queue",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Supabase Schedule Draft",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Supabase Get Settings",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Supabase Save Settings",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase Sync User": {
+      "main": [
+        [
+          {
+            "node": "Respond Success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gmail Get Inbox": {
+      "main": [
+        [
+          {
+            "node": "Gemini AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Gemini AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Gemini AI Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gemini AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Supabase Insert Draft",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase Insert Draft": {
+      "main": [
+        [
+          {
+            "node": "Respond Draft Created",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase Get Drafts": {
+      "main": [
+        [
+          {
+            "node": "Respond Drafts List",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gmail Send Reply": {
+      "main": [
+        [
+          {
+            "node": "Supabase Update Draft Sent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase Update Draft Sent": {
+      "main": [
+        [
+          {
+            "node": "Respond Reply Sent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase Reject Draft": {
+      "main": [
+        [
+          {
+            "node": "Respond Reject Success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase Get History": {
+      "main": [
+        [
+          {
+            "node": "Respond History List",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase Get Queue": {
+      "main": [
+        [
+          {
+            "node": "Respond Queue List",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase Schedule Draft": {
+      "main": [
+        [
+          {
+            "node": "Respond Schedule Success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase Get Settings": {
+      "main": [
+        [
+          {
+            "node": "Respond Settings Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase Save Settings": {
+      "main": [
+        [
+          {
+            "node": "Respond Save Settings Success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

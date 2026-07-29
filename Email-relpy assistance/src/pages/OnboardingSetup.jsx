@@ -36,22 +36,22 @@ export default function OnboardingSetup() {
 
   // Automatically navigate to queue / workspace after onboarding finishes (for demo purposes we can let Cancel Setup go back and we can add a Launch button or auto-navigate)
   const handleLaunch = () => {
-    navigate('/queue')
+    navigate('/dashboard')
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-md bg-background font-body-md text-on-background relative">
+    <div className="min-h-screen flex flex-col items-center justify-center px-16 py-16 bg-background font-body-md text-on-background relative">
       {/* Global Background Ornamentation (Subtle Shader/Texture) */}
       <div className="fixed inset-0 pointer-events-none opacity-20 overflow-hidden z-0"></div>
       
-      <main className="relative z-10 w-full max-w-[560px]">
+      <main className="relative z-10 w-full max-w-3xl">
         {/* Brand Identity Section (Top) */}
-        <div className="flex flex-col items-center mb-xl">
-          <div className="w-16 h-16 bg-primary rounded-xl flex items-center justify-center mb-md shadow-lg shadow-primary/20 cursor-pointer" onClick={handleLaunch}>
+        <div className="flex flex-col items-center mb-16">
+          <div className="w-16 h-16 bg-primary rounded-xl flex items-center justify-center mb-6 shadow-lg shadow-primary/20 cursor-pointer" onClick={handleLaunch}>
             <span className="material-symbols-outlined text-white text-[32px]">hub</span>
           </div>
           <h1 className="font-headline-md text-headline-md text-on-surface text-center">Configuring n8n Workspace</h1>
-          <p className="font-body-md text-on-surface-variant text-center mt-xs">Setting up your professional AI email automation</p>
+          <p className="text-sm text-on-surface-variant text-center mt-2">Setting up your professional AI email automation</p>
         </div>
 
         {/* Main Task Card */}
@@ -61,17 +61,17 @@ export default function OnboardingSetup() {
             <div className="absolute h-full w-[30%] bg-primary rounded-[2px] animate-[progress-move_2s_infinite_ease-in-out]"></div>
           </div>
 
-          <div className="p-lg">
-            <div className="flex items-center justify-between mb-lg">
-              <div className="flex items-center gap-sm">
+          <div className="p-6">
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-3">
                 <span className="material-symbols-outlined text-primary pulse-soft text-[22px]">sync</span>
                 <h2 className="font-headline-sm text-headline-sm">Initialization Status</h2>
               </div>
-              <span className="px-sm py-xs bg-primary-container text-on-primary-container text-label-lg font-label-lg rounded-full">35% Complete</span>
+              <span className="px-3 py-1 bg-primary-container text-on-primary-container text-label-lg font-label-lg rounded-full">35% Complete</span>
             </div>
 
             {/* Automation Timeline */}
-            <div className="space-y-xl relative">
+            <div className="space-y-8 relative">
               {steps.map((step, i) => {
                 const isDone = step.state === 'done'
                 const isActive = step.state === 'active'
@@ -79,7 +79,7 @@ export default function OnboardingSetup() {
                 const isLast = i === steps.length - 1
 
                 return (
-                  <div key={i} className="flex items-start gap-md relative">
+                  <div key={i} className="flex items-start gap-4 relative">
                     {/* Connector Line */}
                     {!isLast && (
                       <div className={`w-[2px] absolute left-[11px] top-6 bottom-[-40px] z-0 ${
@@ -102,24 +102,24 @@ export default function OnboardingSetup() {
 
                     {/* Content */}
                     <div className="flex-1">
-                      <p className={`font-label-lg text-label-lg mb-xs uppercase ${isPending ? 'text-outline' : 'text-primary'}`}>Step {step.num}</p>
+                      <p className={`text-xs font-semibold tracking-wider mb-1 uppercase ${isPending ? 'text-outline' : 'text-primary'}`}>Step {step.num}</p>
                       <h3 className={`font-headline-sm text-headline-sm ${isPending ? 'text-outline' : isActive ? 'text-primary' : 'text-on-surface'}`}>{step.label}</h3>
                       {step.desc && <p className="font-body-md text-on-surface-variant mt-0.5">{step.desc}</p>}
                       
                       {step.extra && (
-                        <div className="flex items-center gap-xs mt-xs text-on-secondary-container bg-secondary-container px-sm py-xs rounded-lg w-fit">
+                        <div className="flex items-center gap-1 mt-1 text-on-secondary-container bg-secondary-container px-3 py-1 rounded-lg w-fit">
                           <span className="material-symbols-outlined text-[14px]">verified_user</span>
                           <span className="text-label-md font-label-md">{step.extra}</span>
                         </div>
                       )}
 
                       {isActive && (
-                        <div className="space-y-sm mt-sm">
-                          <div className="h-10 w-full bg-surface-container rounded-lg flex items-center px-sm gap-sm shimmer-anim">
+                        <div className="space-y-3 mt-3">
+                          <div className="h-10 w-full bg-surface-container rounded-lg flex items-center px-3 gap-3 shimmer-anim">
                             <div className="w-6 h-6 rounded bg-outline-variant/30"></div>
                             <div className="h-3 w-32 bg-outline-variant/30 rounded"></div>
                           </div>
-                          <div className="h-10 w-[85%] bg-surface-container rounded-lg flex items-center px-sm gap-sm shimmer-anim">
+                          <div className="h-10 w-[85%] bg-surface-container rounded-lg flex items-center px-3 gap-3 shimmer-anim">
                             <div className="w-6 h-6 rounded bg-outline-variant/30"></div>
                             <div className="h-3 w-24 bg-outline-variant/30 rounded"></div>
                           </div>
@@ -127,7 +127,7 @@ export default function OnboardingSetup() {
                       )}
 
                       {isPending && step.state !== 'final' && (
-                        <div className="h-3 w-48 bg-surface-container rounded-full mt-sm"></div>
+                        <div className="h-3 w-48 bg-surface-container rounded-full mt-3"></div>
                       )}
                     </div>
                   </div>
@@ -137,14 +137,14 @@ export default function OnboardingSetup() {
           </div>
 
           {/* Card Footer Action */}
-          <div className="bg-surface-container-low px-lg py-md flex items-center justify-between border-t border-outline-variant">
-            <div className="flex items-center gap-sm">
+          <div className="bg-surface-container-low px-6 py-4 flex items-center justify-between border-t border-outline-variant">
+            <div className="flex items-center gap-3">
               <span className="material-symbols-outlined text-on-surface-variant text-[20px]">info</span>
               <span className="text-label-md font-label-md text-on-surface-variant">Estimated time remaining: 2m 14s</span>
             </div>
             <button 
               onClick={() => navigate('/onboarding')}
-              className="px-md py-sm rounded-full bg-surface-variant text-on-surface-variant font-label-lg text-label-lg hover:bg-outline-variant transition-colors cursor-pointer border-none"
+              className="px-4 py-2 rounded-full bg-surface-variant text-on-surface-variant font-label-lg text-label-lg hover:bg-outline-variant transition-colors cursor-pointer border-none"
             >
               Cancel Setup
             </button>
@@ -152,13 +152,13 @@ export default function OnboardingSetup() {
         </div>
 
         {/* System Logs / Debug Preview */}
-        <div className="mt-gutter grid grid-cols-1 md:grid-cols-2 gap-gutter">
-          <div className="bg-white/80 backdrop-blur-sm border border-outline-variant rounded-xl p-md">
-            <div className="flex items-center gap-xs mb-sm">
+        <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="bg-white/80 backdrop-blur-sm border border-outline-variant rounded-xl p-6">
+            <div className="flex items-center gap-1 mb-3">
               <span className="material-symbols-outlined text-[18px] text-primary">terminal</span>
               <span className="text-label-lg font-label-lg text-on-surface">n8n Execution Log</span>
             </div>
-            <div className="font-mono-data text-mono-data text-on-surface-variant space-y-xs opacity-70">
+            <div className="font-mono-data text-mono-data text-on-surface-variant space-y-1 opacity-70">
               {logs.map((entry, i) => (
                 <div key={i} className="flex justify-between">
                   <span>{entry.cmd}</span> 
@@ -168,20 +168,20 @@ export default function OnboardingSetup() {
             </div>
           </div>
 
-          <div className="bg-white/80 backdrop-blur-sm border border-outline-variant rounded-xl p-md flex flex-col justify-center items-center text-center">
-            <div className="w-8 h-8 bg-secondary-container text-on-secondary-container rounded-full flex items-center justify-center mb-sm">
+          <div className="bg-white/80 backdrop-blur-sm border border-outline-variant rounded-xl p-6 flex flex-col justify-center items-center text-center">
+            <div className="w-8 h-8 bg-secondary-container text-on-secondary-container rounded-full flex items-center justify-center mb-3">
               <span className="material-symbols-outlined text-[18px]" style={{ fontVariationSettings: "'FILL' 1" }}>format_image_left</span>
             </div>
             <p className="font-label-lg text-label-lg text-on-surface">Secure Protocol</p>
-            <p className="text-[10px] text-on-surface-variant mt-xs">AES-256 Encrypted Tunnel</p>
+            <p className="text-[10px] text-on-surface-variant mt-1">AES-256 Encrypted Tunnel</p>
           </div>
         </div>
       </main>
 
       {/* Contextual Footer */}
-      <footer className="mt-xl text-center pb-lg relative z-10 w-full">
+      <footer className="mt-16 text-center pb-6 relative z-10 w-full">
         <p className="text-label-md font-label-md text-outline">Powered by n8n Workflow Engine &amp; GPT-4o</p>
-        <div className="flex items-center justify-center gap-md mt-sm">
+        <div className="flex items-center justify-center gap-6 mt-3">
           <a className="text-label-md font-label-md text-on-surface-variant hover:text-primary transition-colors" href="#">Security Policy</a>
           <span className="w-1 h-1 rounded-full bg-outline-variant"></span>
           <a className="text-label-md font-label-md text-on-surface-variant hover:text-primary transition-colors" href="#">Documentation</a>

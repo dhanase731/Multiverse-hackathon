@@ -1,50 +1,58 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Layout from '../components/Layout'
+import { getQueue, approveDraft, rejectDraft } from '../api'
+import { useSocket } from '../api/useSocket'
 
-const queueCards = [
-  {
-    id: 1, name: 'John Smith', subject: 'Meeting Tomorrow', status: 'PROCESSING',
-    statusBg: 'bg-primary-container text-on-primary-container',
-    avatar: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDJ7Tj60RGr_l_B930atkgdXVdmXtp1Ki7BssE7FCIK6BYeDM4k9-etMVArnTjbIZ6oyzB1S-tKcOfAmT3nxMi_jRIkdLCqJCu-9GZCVVusEMSM5n9On0BQX-aMNOXXn061sJf7kBIzo9mV7T5oBo0TAXIg0UZfsd6w5YDRMXwdNvjZ7YaBdQmrKHj2t3jbCMOfX5W0cqQehLNv9WMhC-5ewbRxuGjvESq3XsMevnBIA6J4OZ5lbidf',
-    steps: [
-      { icon: 'check_circle', label: 'Reading Email', done: true, active: false },
-      { icon: 'psychology', label: 'Generating Reply (Gemini)', done: false, active: true },
-      { icon: 'drafts', label: 'Saving Draft', done: false, active: false },
-      { icon: 'airplanemode_active', label: 'Sending Email', done: false, active: false },
-    ],
-    active: true,
-  },
-  {
-    id: 2, name: 'Elena Rodriguez', subject: 'Project Milestone Update', status: 'WAITING',
-    statusBg: 'bg-tertiary-container text-on-tertiary-container',
-    avatar: 'https://lh3.googleusercontent.com/aida-public/AB6AXuB8bwZjnfrX5AWHgPoE-xZ3TdE099W20Ev4lFeI0EogWDtJPrYcMoRnG0yvBIp4yJdmm_QL-4hMMaBbbvPiKChvqN75uqZ3qL4abl7wNOjfWeU2lXRZtPTH7bvcp9Ah3nKj9cRbXfOxZ5lMFj0MnpnmB7N4wTE_emB2WIZZmAw3E-1mJ13cebetGd7G-hElARTT03KQXZzx4zN37SWSzOVQbbc2zz9Hl_7GEg7S3xSQgh7tsFG5NQwp',
-    steps: [
-      { icon: 'check_circle', label: 'Reading Email', done: true, active: false },
-      { icon: 'check_circle', label: 'Generating Reply', done: true, active: false },
-      { icon: 'pause', label: 'Saving Draft (Pending Connection)', done: false, active: true, warning: true },
-    ],
-    active: false,
-  },
-  {
-    id: 3, name: 'Kevin Wong', subject: 'Partnership Inquiry', status: 'QUEUED',
-    statusBg: 'bg-surface-container-highest text-on-surface-variant',
-    avatar: null, initials: 'KW', steps: null, active: false,
-  },
+const STEP_MAP = [
+  { icon: 'check_circle', label: 'Reading Email' },
+  { icon: 'psychology', label: 'Generating Reply (Gemini)' },
+  { icon: 'drafts', label: 'Saving Draft' },
+  { icon: 'airplanemode_active', label: 'Sending Email' },
 ]
 
-const originalEmail = `"Hi team, I would like to schedule a quick sync for tomorrow at 2 PM EST to discuss the new project timeline. Please let me know if this works for you."`
+const statusStep = { processing: 1, pending: 2, sent: 3 }
 
-const timeline = [
-  { label: 'Email Received & Triggered', sub: '14:02:11 • Completed (0.4s)', done: true },
-  { label: 'Parsing Content', sub: '14:02:12 • Completed (1.2s)', done: true },
-  { label: 'Gemini Draft Generation', sub: '14:02:14 • In Progress (2.5s elapsed)', done: false, active: true },
-  { label: 'Draft Verification', sub: 'Upcoming...', done: false, active: false },
-]
+function buildSteps(status) {
+  const active = statusStep[status] ?? 1
+  return STEP_MAP.map((s, i) => ({ ...s, done: i < active, active: i === active }))
+}
 
 export default function UnifiedWorkspace() {
-  const [selectedId, setSelectedId] = useState(1)
+  const [queue, setQueue] = useState([])
+  const [selectedId, setSelectedId] = useState(null)
   const navigate = useNavigate()
+  const userId = localStorage.getItem('userId')
+
+  const fetchQueue = async () => {
+    if (!userId) return
+    try {
+      const { data } = await getQueue(userId)
+      setQueue(data)
+      if (data.length && !selectedId) setSelectedId(data[0].id)
+    } catch (_) {}
+  }
+
+  useEffect(() => { fetchQueue() }, [])
+
+  useSocket(userId, {
+    onEmailProcessed: () => fetchQueue(),
+    onEmailSent: () => fetchQueue(),
+  })
+
+  const selected = queue.find(q => q.id === selectedId)
+
+  const handleApprove = async () => {
+    if (!selected) return
+    await approveDraft(selected.id, userId)
+    fetchQueue()
+  }
+
+  const handleReject = async () => {
+    if (!selected) return
+    await rejectDraft(selected.id)
+    fetchQueue()
+  }
 
   return (
     <Layout>

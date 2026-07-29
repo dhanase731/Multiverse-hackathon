@@ -1,15 +1,5 @@
 import { useState } from 'react'
-import { useNavigate, useLocation } from 'react-router-dom'
-
-const navItems = [
-  { icon: 'inbox', label: 'Inbox', path: '/landing' },
-  { icon: 'star', label: 'Priority', path: '/landing' },
-  { icon: 'psychology', label: 'AI Drafts', path: '/workspace' },
-  { icon: 'schedule', label: 'Scheduled', path: '/landing' },
-  { icon: 'history', label: 'History', path: '/history' },
-  { icon: 'send', label: 'Sent', path: '/workspace/reply-history' },
-  { icon: 'settings', label: 'Settings', path: '/workspace/settings' },
-]
+import Layout from '../components/Layout'
 
 const toneOptions = [
   { value: 'professional', icon: 'work', label: 'Professional' },
@@ -36,16 +26,13 @@ function Toggle({ value, onChange }) {
 }
 
 export default function WorkspaceSettings() {
-  const navigate = useNavigate()
-  const { pathname } = useLocation()
-
   const [tone, setTone] = useState('professional')
   const [autoSchedule, setAutoSchedule] = useState(true)
   const [categorization, setCategorization] = useState(false)
   const [language, setLanguage] = useState('English (United States)')
   const [frequency, setFrequency] = useState('Every hour')
   const [signature, setSignature] = useState('Best regards,\nAlex Rivera\nHead of Product at ReplyAssist AI')
-  const [saveState, setSaveState] = useState('idle') // idle | saving | saved
+  const [saveState, setSaveState] = useState('idle')
 
   const handleSave = () => {
     setSaveState('saving')
@@ -56,80 +43,9 @@ export default function WorkspaceSettings() {
   }
 
   return (
-    <div className="flex h-screen overflow-hidden bg-background font-body-md text-on-surface">
-      
-      {/* ── Sidebar ── */}
-      <aside className="w-[256px] h-screen sticky left-0 top-0 border-r border-outline-variant flex flex-col flex-shrink-0 p-4 bg-background">
-        {/* Brand */}
-        <div className="mb-6 px-2">
-          <h1 className="text-lg font-bold text-primary leading-6">Email Reply</h1>
-          <p className="text-xs font-semibold tracking-wider text-on-surface-variant opacity-70">AI Assistant</p>
-        </div>
-
-        {/* Compose CTA */}
-        <button className="mb-6 w-full flex items-center justify-center gap-2 p-3 bg-primary text-on-primary rounded-xl text-lg font-medium hover:shadow-lg hover:shadow-primary/30 active:scale-95 transition-all cursor-pointer border-none">
-          <span className="material-symbols-outlined text-[20px]">edit</span>
-          Compose
-        </button>
-
-        {/* Nav */}
-        <nav className="flex-1 space-y-1 overflow-y-auto">
-          {navItems.map(item => {
-            const active = pathname === item.path
-            return (
-              <button
-                key={item.label}
-                onClick={() => navigate(item.path)}
-                className={`w-full flex items-center gap-3 text-left p-3 rounded-lg text-xs font-semibold tracking-wider transition-all cursor-pointer border-none ${
-                  active 
-                    ? 'bg-primary/10 text-primary border-l-4 border-primary' 
-                    : 'bg-transparent text-on-surface-variant border-l-4 border-transparent hover:bg-surface-container-high'
-                }`}
-              >
-                <span className="material-symbols-outlined text-[20px]">{item.icon}</span>
-                <span>{item.label}</span>
-              </button>
-            )
-          })}
-        </nav>
-
-        {/* Footer */}
-        <div className="pt-6 border-t border-outline-variant space-y-1">
-          <button className="w-full flex items-center gap-3 p-3 rounded-lg text-xs text-on-surface-variant hover:bg-surface-container-high transition-colors cursor-pointer border-none bg-transparent">
-            <span className="material-symbols-outlined text-[20px]">cloud</span>
-            <span>Storage</span>
-          </button>
-          <button className="w-full flex items-center gap-3 p-3 rounded-lg text-xs text-on-surface-variant hover:bg-surface-container-high transition-colors cursor-pointer border-none bg-transparent">
-            <img
-              src="https://lh3.googleusercontent.com/aida-public/AB6AXuADHqJuJHgq4FELPzMuKn1o8aPO0OyHR_1rXvc7ouqYq_KcJWNiXiXIQy3J0041KLbjBsegnp_AUXMGdZaFy4ThvuEScvrXherFN651CfD18bahViOCPV-FEhZo2EpmOz9L5W8PH-uNaGvPj9BRJUDzvjjBsg0hI2EZ8JvIJwPIMKIIANTSe9TdeZNMU28zopNGK9e8rh8RCup8OIvJsnt6Ew1zLYgcy7Tm_mESEuYgsjR1sZ4lguoi"
-              alt="Profile"
-              className="w-6 h-6 rounded-full object-cover"
-            />
-            <span>Profile</span>
-          </button>
-        </div>
-      </aside>
-
-      {/* ── Main ── */}
-      <main className="flex-1 overflow-y-auto relative bg-background pb-32">
-        {/* Top App Bar */}
-        <header className="w-full h-16 sticky top-0 z-50 flex items-center justify-between border-b border-outline-variant bg-surface px-6">
-          <h2 className="text-lg font-extrabold text-on-surface">Settings</h2>
-          <div className="flex items-center gap-4">
-            <div className="relative">
-              <button className="p-2 rounded-full hover:bg-surface-container active:scale-95 transition-all cursor-pointer border-none bg-transparent">
-                <span className="material-symbols-outlined text-on-surface-variant">notifications</span>
-              </button>
-              <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-error" />
-            </div>
-            <button className="p-2 rounded-full hover:bg-surface-container active:scale-95 transition-all cursor-pointer border-none bg-transparent">
-              <span className="material-symbols-outlined text-on-surface-variant">help_outline</span>
-            </button>
-          </div>
-        </header>
-
-        {/* Content */}
-        <div className="max-w-[896px] mx-auto px-6 py-6 space-y-6">
+    <Layout>
+      <div className="p-6 pb-28">
+        <div className="max-w-[896px] mx-auto space-y-6">
 
           {/* Section 1: Connected Gmail */}
           <section>
@@ -173,7 +89,6 @@ export default function WorkspaceSettings() {
                 <p className="text-sm text-on-surface-variant">Customize how AI interacts with your workflow</p>
               </div>
               <div className="space-y-6">
-                {/* Frequency */}
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <div className="flex-1">
                     <label className="block mb-1 text-base text-on-surface font-medium">Inbox Scanning Frequency</label>
@@ -191,7 +106,6 @@ export default function WorkspaceSettings() {
                   </select>
                 </div>
 
-                {/* Auto-Schedule */}
                 <div className="flex items-center justify-between gap-4 pt-4 border-t border-outline-variant">
                   <div className="flex-1">
                     <label className="block mb-1 text-base text-on-surface font-medium">Auto-Schedule Drafts</label>
@@ -203,7 +117,6 @@ export default function WorkspaceSettings() {
                   </div>
                 </div>
 
-                {/* Categorization */}
                 <div className="flex items-center justify-between gap-4 pt-4 border-t border-outline-variant">
                   <div className="flex-1">
                     <label className="block mb-1 text-base text-on-surface font-medium">Categorization Engine</label>
@@ -224,7 +137,6 @@ export default function WorkspaceSettings() {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Tone */}
                 <div className="space-y-2">
                   <label className="block text-base text-on-surface font-medium">Default Writing Tone</label>
                   <div className="grid grid-cols-2 gap-2">
@@ -235,8 +147,8 @@ export default function WorkspaceSettings() {
                           key={opt.value}
                           onClick={() => setTone(opt.value)}
                           className={`p-3 rounded-lg flex flex-col items-center gap-1 transition-all cursor-pointer border ${
-                            isSelected 
-                              ? 'border-primary bg-primary/10 text-primary font-bold' 
+                            isSelected
+                              ? 'border-primary bg-primary/10 text-primary font-bold'
                               : 'border-outline-variant text-on-surface-variant bg-transparent hover:border-primary'
                           }`}
                         >
@@ -248,7 +160,6 @@ export default function WorkspaceSettings() {
                   </div>
                 </div>
 
-                {/* Language + Upload */}
                 <div className="space-y-2">
                   <label className="block text-base text-on-surface font-medium">Primary Language</label>
                   <select
@@ -275,7 +186,6 @@ export default function WorkspaceSettings() {
                 </div>
               </div>
 
-              {/* Signature */}
               <div className="mt-6 pt-6 border-t border-outline-variant">
                 <label className="block mb-2 text-base text-on-surface font-medium">AI-Generated Signature</label>
                 <textarea
@@ -292,23 +202,23 @@ export default function WorkspaceSettings() {
             </div>
           </section>
 
+          {/* Footer */}
+          <footer className="flex flex-col items-center justify-center border-t border-outline-variant py-6 text-[11px] font-semibold tracking-wider text-on-surface-variant gap-2">
+            <div className="flex gap-4 mb-2">
+              {['Privacy Policy', 'Terms of Service', 'Contact Support'].map(link => (
+                <a key={link} href="#" className="transition-colors hover:underline text-on-surface-variant hover:text-primary no-underline">
+                  {link}
+                </a>
+              ))}
+            </div>
+            <p>© 2024 Email Reply Assistance. Powered by Advanced AI.</p>
+          </footer>
+
         </div>
+      </div>
 
-        {/* Footer */}
-        <footer className="w-full flex flex-col items-center justify-center border-t border-outline-variant py-6 bg-surface-container-lowest text-[11px] font-semibold tracking-wider text-on-surface-variant gap-2 pb-32">
-          <div className="flex gap-4 mb-2">
-            {['Privacy Policy', 'Terms of Service', 'Contact Support'].map(link => (
-              <a key={link} href="#" className="transition-colors hover:underline text-on-surface-variant hover:text-primary no-underline">
-                {link}
-              </a>
-            ))}
-          </div>
-          <p>© 2024 Email Reply Assistance. Powered by Advanced AI.</p>
-        </footer>
-      </main>
-
-      {/* ── Sticky Bottom Action Bar ── */}
-      <div className="fixed bottom-0 right-0 flex items-center justify-center border-t z-40 bg-white/80 backdrop-blur-md border-outline-variant py-4" style={{ left: '256px' }}>
+      {/* Sticky Bottom Action Bar */}
+      <div className="fixed bottom-0 right-0 left-0 md:left-[280px] flex items-center justify-center border-t z-40 bg-white/80 backdrop-blur-md border-outline-variant py-4">
         <div className="flex justify-end gap-4 max-w-[896px] w-full px-6">
           <button className="transition-colors px-8 py-3 text-on-surface-variant hover:text-on-surface text-lg font-medium bg-transparent border-none cursor-pointer">
             Cancel
@@ -330,6 +240,6 @@ export default function WorkspaceSettings() {
           </button>
         </div>
       </div>
-    </div>
+    </Layout>
   )
 }
